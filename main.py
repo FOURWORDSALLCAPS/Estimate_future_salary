@@ -139,7 +139,7 @@ def get_statistics_sj(languages, api_key):
 def main():
     env = Env()
     env.read_env()
-    api_key = env("HH_API_KEY")
+    api_key = env("SJ_API_KEY")
     languages = ["Python", "Java", "JavaScript", "PHP", "C#", "Swift", "Objective-C", "Ruby", "Scala", "Go"]
     print(get_statistics_hh(languages))
     print(get_statistics_sj(languages, api_key))

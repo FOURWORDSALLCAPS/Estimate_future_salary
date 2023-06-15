@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ## Подготовка к запуску
 Для запуска необходимо:
 1. Создать файл .env в корневом каталоге со скриптом
-2. Получить API SuperJob на их [веб-сайте](https://api.superjob.ru/), и указать его в качестве переменной окружения `HH_API_KEY`. Например: `HH_API_KEY=v3.sdfd13253423236:SSDDSfghhft54gdf`
+2. Получить API SuperJob на их [веб-сайте](https://api.superjob.ru/), и указать его в качестве переменной окружения `SJ_API_KEY`. Например: `SJ_API_KEY=v3.sdfd13253423236:SSDDSfghhft54gdf`
 
 ## Запуск скрипта
 
