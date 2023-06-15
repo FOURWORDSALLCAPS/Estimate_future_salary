@@ -1,7 +1,6 @@
 import requests
 import time
 from terminaltables import AsciiTable
-from collections import defaultdict
 from environs import Env
 
 
@@ -41,60 +40,51 @@ def get_statistics_hh(languages):
         'User-Agent': 'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14',
         'Referer': 'https://hh.ru/search/vacancy'
     }
-    table_data_hh = [
-        ["Язык программирования", "Вакансий найдено", "Вакансий обработано", "Средняя зарплата"]
-    ]
-    title_hh = 'HeadHunter Moscow'
+    salaries_hh = {}
     for language in languages:
         moscow_region = 1
         month = 30
         params = {"text": language, "area": moscow_region, "only_with_salary": True, "period": month}
         response = requests.get(url_hh, params=params, headers=headers_hh)
         response.raise_for_status()
-        if response.ok:
-            pages = response.json()["pages"]
-            found = response.json()["found"]
-            salaries_hh[language]["vacancies_found"] = found
-            vacancies_processed = 0
+        if not response.ok:
+            continue
+        server_response = response.json()
+        pages = server_response["pages"]
+        found = server_response["found"]
+        vacancies_processed = 0
+        average_salary = 0
+        for page in range(pages):
+            params = {"page": page}
+            response = requests.get(url_hh, params=params, headers=headers_hh)
+            response.raise_for_status()
+            time.sleep(0.5)
+            if not response.ok:
+                continue
+            vacancies = response.json()["items"]
+            for vacancy in vacancies:
+                expected_salary = predict_rub_salary_hh(vacancy)
+                if not expected_salary:
+                    continue
+                vacancies_processed += 1
+                average_salary += expected_salary
+        if vacancies_processed > 0:
+            average_salary = int(average_salary / vacancies_processed)
+            vacancies_found = found
+        else:
             average_salary = 0
-            for page in range(pages):
-                params = {"text": language, "area": 1, "only_with_salary": True, "page": page}
-                response = requests.get(url_hh, params=params, headers=headers_hh)
-                response.raise_for_status()
-                time.sleep(1)
-                if response.ok:
-                    vacancies = response.json()["items"]
-                    for vacancy in vacancies:
-                        expected_salary = predict_rub_salary_hh(vacancy)
-                        if expected_salary:
-                            vacancies_processed += 1
-                            average_salary += expected_salary
-            if vacancies_processed > 0:
-                salaries_hh[language]["average_salary"] = int(average_salary / vacancies_processed)
-            salaries_hh[language]["vacancies_processed"] = vacancies_processed
-        salary = salaries_hh[language]
-        table_row = [
-            language,
-            salary['vacancies_found'],
-            salary['vacancies_processed'],
-            salary['average_salary']
-        ]
-        table_data_hh.append(table_row)
-    table_hh = AsciiTable(table_data_hh, title_hh)
-    return table_hh.table
             vacancies_found = 0
         salary = {"vacancies_found": vacancies_found,
                   "vacancies_processed": vacancies_processed,
                   "average_salary": average_salary}
+        salaries_hh[language] = salary
+    return salaries_hh
 
 
 def get_statistics_sj(languages, api_key):
     url_sj = 'https://api.superjob.ru/2.33/vacancies/'
     headers_sj = {'X-Api-App-Id': f'{api_key}'}
-    table_data_sj = [
-        ["Язык программирования", "Вакансий найдено", "Вакансий обработано", "Средняя зарплата"]
-    ]
-    title_sj = 'SuperJob Moscow'
+    salaries_sj = {}
     for language in languages:
         page = 0
         pages = 1
@@ -115,35 +105,40 @@ def get_statistics_sj(languages, api_key):
             response = requests.get(url_sj, headers=headers_sj, params=params)
             response.raise_for_status()
             time.sleep(0.5)
-            result = response.json()
-            vacancies = result['objects']
+            server_response = response.json()
+            found = server_response['total']
+            vacancies = server_response['objects']
             if not vacancies:
                 break
-            pages = result['total'] // len(vacancies) + 1
+            pages = server_response['total'] // len(vacancies) + 1
             for vacancy in vacancies:
-                vacancies_processed += 1
-                salary = predict_rub_salary_sj(vacancy)
-                if salary:
-                    salaries_sj[language]['average_salary'] += salary
-                    salary_sum += salary
-            salaries_sj[language]['vacancies_found'] = result['total']
-            salaries_sj[language]['vacancies_processed'] = vacancies_processed
-        for keyword, salary in salaries_sj.items():
-            vacancies_processed = salary['vacancies_processed']
+                expected_salary = predict_rub_salary_sj(vacancy)
+                if expected_salary:
+                    vacancies_processed += 1
+                    average_salary += expected_salary
             if vacancies_processed > 0:
                 average_salary_sj = int(average_salary / vacancies_processed)
         salary = {"vacancies_found": found,
                   "vacancies_processed": vacancies_processed,
                   "average_salary": average_salary_sj}
+        salaries_sj[language] = salary
+    return salaries_sj
+
+
+def create_chart_sj(statistics, title):
+    chart = [
+        ["Язык программирования", "Вакансий найдено", "Вакансий обработано", "Средняя зарплата"]
+    ]
+    for language, salary in statistics.items():
         table_row = [
             language,
             salary['vacancies_found'],
             salary['vacancies_processed'],
             salary['average_salary']
         ]
-        table_data_sj.append(table_row)
-    table_sh = AsciiTable(table_data_sj, title_sj)
-    return table_sh.table
+        chart.append(table_row)
+    table = AsciiTable(chart, title)
+    return table.table
 
 
 def main():
