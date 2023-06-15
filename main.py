@@ -47,7 +47,9 @@ def get_statistics_hh(languages):
     ]
     title_hh = 'HeadHunter Moscow'
     for language in languages:
-        params = {"text": language, "area": 1, "only_with_salary": True, "period": 30}
+        moscow_region = 1
+        month = 30
+        params = {"text": language, "area": moscow_region, "only_with_salary": True, "period": month}
         response = requests.get(url_hh, params=params, headers=headers_hh)
         response.raise_for_status()
         if response.ok:
@@ -95,13 +97,17 @@ def get_statistics_sj(languages, api_key):
         page = 0
         pages = 1
         vacancies_processed = 0
-        salary_sum = 0
+        average_salary = 0
+        found = 0
+        moscow = 4
+        programmers = 48
+        average_salary_sj = 0
         while page < pages:
             page += 1
             params = {
                 'keyword': language,
-                'town': 4,
-                'catalogues': 48,
+                'town': moscow,
+                'catalogues': programmers,
                 'count': page
             }
             response = requests.get(url_sj, headers=headers_sj, params=params)
