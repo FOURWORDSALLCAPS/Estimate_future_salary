@@ -4,32 +4,31 @@ from terminaltables import AsciiTable
 from environs import Env
 
 
+def calculate_expected_salary(salary_from, salary_to):
+    if salary_from and salary_to:
+        expected_salary = (salary_from + salary_to) / 2
+        return int(expected_salary)
+    elif salary_from:
+        expected_salary = salary_from * 1.2
+        return int(expected_salary)
+    else:
+        expected_salary = salary_to * 0.8
+        return int(expected_salary)
+
+
 def predict_rub_salary_hh(vacancy):
     salary = vacancy['salary']
     if salary and salary['currency'] == 'RUR':
-        if salary['from'] and salary['to']:
-            expected_salary = (salary['from'] + salary['to']) / 2
-            return int(expected_salary)
-        elif salary['from']:
-            expected_salary = salary['from'] * 1.2
-            return int(expected_salary)
-        else:
-            expected_salary = salary['to'] * 0.8
-            return int(expected_salary)
+        expected_salary = calculate_expected_salary(salary['from'], salary['to'])
+        return expected_salary
     else:
         return None
 
 
 def predict_rub_salary_sj(vacancy):
-    if vacancy['payment_from'] and vacancy['payment_to']:
-        expected_salary = (vacancy['payment_from'] + vacancy['payment_to']) / 2
-        return int(expected_salary)
-    elif vacancy['payment_from']:
-        expected_salary = vacancy['payment_from'] * 1.2
-        return int(expected_salary)
-    elif vacancy['payment_to']:
-        expected_salary = vacancy['payment_to'] * 0.8
-        return int(expected_salary)
+    if vacancy:
+        expected_salary = calculate_expected_salary(vacancy['payment_from'], vacancy['payment_to'])
+        return expected_salary
     else:
         return None
 
@@ -146,8 +145,12 @@ def main():
     env.read_env()
     api_key = env("SJ_API_KEY")
     languages = ["Python", "Java", "JavaScript", "PHP", "C#", "Swift", "Objective-C", "Ruby", "Scala", "Go"]
-    print(get_statistics_hh(languages))
-    print(get_statistics_sj(languages, api_key))
+    title_sj = 'SuperJob Moscow'
+    title_hh = 'HeadHunter Moscow'
+    statistics_sj = get_statistics_sj(languages, api_key)
+    statistics_hh = get_statistics_hh(languages)
+    print(create_chart_sj(statistics_sj, title_sj))
+    print(create_chart_sj(statistics_hh, title_hh))
 
 
 if __name__ == "__main__":
