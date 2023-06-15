@@ -37,7 +37,6 @@ def predict_rub_salary_sj(vacancy):
 
 def get_statistics_hh(languages):
     url_hh = "https://api.hh.ru/vacancies"
-    salaries_hh = defaultdict(lambda: {"vacancies_found": 0, "vacancies_processed": 0, "average_salary": 0})
     headers_hh = {
         'User-Agent': 'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14',
         'Referer': 'https://hh.ru/search/vacancy'
@@ -83,11 +82,14 @@ def get_statistics_hh(languages):
         table_data_hh.append(table_row)
     table_hh = AsciiTable(table_data_hh, title_hh)
     return table_hh.table
+            vacancies_found = 0
+        salary = {"vacancies_found": vacancies_found,
+                  "vacancies_processed": vacancies_processed,
+                  "average_salary": average_salary}
 
 
 def get_statistics_sj(languages, api_key):
     url_sj = 'https://api.superjob.ru/2.33/vacancies/'
-    salaries_sj = defaultdict(lambda: {"vacancies_found": 0, "vacancies_processed": 0, "average_salary": 0})
     headers_sj = {'X-Api-App-Id': f'{api_key}'}
     table_data_sj = [
         ["Язык программирования", "Вакансий найдено", "Вакансий обработано", "Средняя зарплата"]
@@ -129,8 +131,10 @@ def get_statistics_sj(languages, api_key):
         for keyword, salary in salaries_sj.items():
             vacancies_processed = salary['vacancies_processed']
             if vacancies_processed > 0:
-                salaries_sj[keyword]['average_salary'] = int(salary['average_salary'] / vacancies_processed)
-        salary = salaries_sj[language]
+                average_salary_sj = int(average_salary / vacancies_processed)
+        salary = {"vacancies_found": found,
+                  "vacancies_processed": vacancies_processed,
+                  "average_salary": average_salary_sj}
         table_row = [
             language,
             salary['vacancies_found'],
