@@ -21,16 +21,12 @@ def predict_rub_salary_hh(vacancy):
     if salary and salary['currency'] == 'RUR':
         expected_salary = calculate_expected_salary(salary['from'], salary['to'])
         return expected_salary
-    else:
-        return None
 
 
 def predict_rub_salary_sj(vacancy):
     if vacancy:
         expected_salary = calculate_expected_salary(vacancy['payment_from'], vacancy['payment_to'])
         return expected_salary
-    else:
-        return None
 
 
 def get_statistics_hh(languages):
@@ -115,8 +111,8 @@ def get_statistics_sj(languages, api_key):
                 if expected_salary:
                     vacancies_processed += 1
                     average_salary += expected_salary
-            if vacancies_processed > 0:
-                average_salary_sj = int(average_salary / vacancies_processed)
+        if vacancies_processed:
+            average_salary_sj = int(average_salary / vacancies_processed)
         salary = {"vacancies_found": found,
                   "vacancies_processed": vacancies_processed,
                   "average_salary": average_salary_sj}
@@ -124,7 +120,7 @@ def get_statistics_sj(languages, api_key):
     return salaries_sj
 
 
-def create_chart_sj(statistics, title):
+def create_chart(statistics, title):
     chart = [
         ["Язык программирования", "Вакансий найдено", "Вакансий обработано", "Средняя зарплата"]
     ]
@@ -149,8 +145,8 @@ def main():
     title_hh = 'HeadHunter Moscow'
     statistics_sj = get_statistics_sj(languages, api_key)
     statistics_hh = get_statistics_hh(languages)
-    print(create_chart_sj(statistics_sj, title_sj))
-    print(create_chart_sj(statistics_hh, title_hh))
+    print(create_chart(statistics_hh, title_hh))
+    print(create_chart(statistics_sj, title_sj))
 
 
 if __name__ == "__main__":
