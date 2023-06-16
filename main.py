@@ -37,39 +37,35 @@ def get_statistics_hh(languages):
     }
     salaries_hh = {}
     for language in languages:
+        page = 0
+        pages = 1
+        found = 0
         moscow_region = 1
         month = 30
-        params = {"text": language, "area": moscow_region, "only_with_salary": True, "period": month}
-        response = requests.get(url_hh, params=params, headers=headers_hh)
-        response.raise_for_status()
-        if not response.ok:
-            continue
-        server_response = response.json()
-        pages = server_response["pages"]
-        found = server_response["found"]
         vacancies_processed = 0
         average_salary = 0
-        for page in range(pages):
-            params = {"page": page}
+        while page < pages:
+            page += 1
+            params = {"text": language, "area": moscow_region, "period": month, "page": page}
             response = requests.get(url_hh, params=params, headers=headers_hh)
             response.raise_for_status()
             time.sleep(0.5)
-            if not response.ok:
-                continue
+            server_response = response.json()
+            found = server_response["found"]
             vacancies = response.json()["items"]
+            if not vacancies:
+                break
+            pages = server_response['pages'] // len(vacancies) + 1
             for vacancy in vacancies:
                 expected_salary = predict_rub_salary_hh(vacancy)
-                if not expected_salary:
-                    continue
-                vacancies_processed += 1
-                average_salary += expected_salary
-        if vacancies_processed > 0:
+                if expected_salary:
+                    vacancies_processed += 1
+                    average_salary += expected_salary
+        if vacancies_processed:
             average_salary = int(average_salary / vacancies_processed)
-            vacancies_found = found
         else:
             average_salary = 0
-            vacancies_found = 0
-        salary = {"vacancies_found": vacancies_found,
+        salary = {"vacancies_found": found,
                   "vacancies_processed": vacancies_processed,
                   "average_salary": average_salary}
         salaries_hh[language] = salary
