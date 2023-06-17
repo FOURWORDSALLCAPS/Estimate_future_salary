@@ -52,7 +52,7 @@ def get_statistics_hh(languages):
             time.sleep(0.5)
             server_response = response.json()
             found = server_response["found"]
-            vacancies = response.json()["items"]
+            vacancies = server_response["items"]
             if not vacancies:
                 break
             pages = server_response['pages'] // len(vacancies) + 1
